@@ -22,4 +22,4 @@ On GNU/Linux, run `make` - simple as that! Should compile on Windows, but you mi
   and are idiomatic to the language. (Please feel free to submit your own!)
 
 ## Contributing
-	Arborealis is released under the MIT license. Feel free to fork and pull!
+Arborealis is released under the MIT license. Feel free to fork and pull!

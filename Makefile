@@ -1,21 +1,21 @@
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -iquotesrc -Wall
 OBJECTS = stack_queue.o parse.o run.o main.o
 
 arborealis: $(OBJECTS)
 	@$(CC) $(CFLAGS) -o arborealis $(OBJECTS)
 
-main.o: main.c
-	@$(CC) $(CFLAGS) -c main.c
+main.o: src/main.c
+	@$(CC) $(CFLAGS) -c src/main.c
 
-stack_queue.o: stack_queue.c stack_queue.h
-	@$(CC) $(CFLAGS) -c stack_queue.c
+stack_queue.o: src/stack_queue.c src/stack_queue.h
+	@$(CC) $(CFLAGS) -c src/stack_queue.c
 
-parse.o: parse.c parse.h
-	@$(CC) $(CFLAGS) -c parse.c
+parse.o: src/parse.c src/parse.h
+	@$(CC) $(CFLAGS) -c src/parse.c
 
-run.o: run.c run.h
-	@$(CC) $(CFLAGS) -c run.c
+run.o: src/run.c src/run.h
+	@$(CC) $(CFLAGS) -c src/run.c
 
 .PHONY: clean
 clean:
