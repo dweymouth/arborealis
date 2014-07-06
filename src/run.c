@@ -11,13 +11,6 @@ typedef struct treenode {
 	unsigned char value;
 } TreeNode;
 
-// The Arborealis execution environment
-typedef struct tree {
-	TreeNode *root;
-	TreeNode *parent;
-	TreeNode *current;
-} Tree;
-
 // Return a pointer to a newly initialized TreeNode
 TreeNode *newNode() {
 	TreeNode *theNode = malloc(sizeof(TreeNode));
@@ -29,121 +22,128 @@ TreeNode *newNode() {
 
 void run(Program *program) {
 	// Initialize the tree
-	Tree *tree = malloc(sizeof(Tree));
-	tree->root = tree->current = tree->parent = newNode();
+	TreeNode *root, *parent, *current;
+	root = current = parent = newNode();
 
+	// Localize pointers for optimization
+	char *instructions = program->instructions;
+	Queue *jumpForward = program->jumpForward;
+	Stack *jumpBack = program->jumpBack;
+
+	register int pc = 0; // program counter
 	int c; // temporarily hold a character read from stdin
+
 	// Execute the program instructions. Loop terminates when the PC
 	// points to the NULL instruction.
 	for (;;) {
-		switch(program->instructions[program->pc]) {
+		switch(instructions[pc]) {
 		case '>': // move right if right exists
-			if (tree->current->right) {
-				tree->parent = tree->current;
-				tree->current = tree->current->right;
+			if (current->right) {
+				parent = current;
+				current = current->right;
 			}
 			break;
 		case '<': // move left if left exists
-			if (tree->current->left) {
-				tree->parent = tree->current;
-				tree->current = tree->current->left;
+			if (current->left) {
+				parent = current;
+				current = current->left;
 			}
 			break;
 		case '(': // left paradox function
-			if (!tree->current->left) {
-				tree->current->left = tree->parent;
+			if (!current->left) {
+				current->left = parent;
 			}
 			break;
 		case ')': // right paradox function
-			if (!tree->current->right) {
-				tree->current->right = tree->parent;
+			if (!current->right) {
+				current->right = parent;
 			}
 			break;
 		case '/': // if left doesn't exist, create and move left
-			if (!tree->current->left) {
-				tree->current->left = newNode();
+			if (!current->left) {
+				current->left = newNode();
 			}
 			break;
 		case '\\': // if right doesn't exist, create and move right
-			if (!tree->current->right) {
-				tree->current->right = newNode();
+			if (!current->right) {
+				current->right = newNode();
 			}
 			break;
 		case '{': // set value to 1 if left exists, 0 otherwise
-			tree->current->value = (tree->current->left != NULL);
+			current->value = (current->left != NULL);
 			break;
 		case '}': // set value to 1 if right exists, 0 otherwise
-			tree->current->value = (tree->current->right != NULL);
+			current->value = (current->right != NULL);
 			break;
 		case '+': // incr value at current node
-			++tree->current->value;
+			++current->value;
 			break;
 		case '-': // decr value at current node
-			--tree->current->value;
+			--current->value;
 			break;
 		case '!': // conditional left mover
-			if (!tree->current->left) {
-				tree->current->left = newNode();
-				tree->current = tree->current->left;
-			} else if (!tree->current->value) {
-				tree->current = tree->current->left;
-			} else if (!tree->current->right) {
-				tree->current->right = newNode();
-				tree->current = tree->current->right;
-			} else if (tree->current->value) {
-				tree->current = tree->current->right;
+			if (!current->left) {
+				current->left = newNode();
+				current = current->left;
+			} else if (!current->value) {
+				current = current->left;
+			} else if (!current->right) {
+				current->right = newNode();
+				current = current->right;
+			} else if (current->value) {
+				current = current->right;
 			} else break;	
-			tree->parent = tree->current;
+			parent = current;
 			break;
 		case '?': // conditional right mover
-			if (!tree->current->right) {
-				tree->current->right = newNode();
-				tree->current = tree->current->right;
-			} else if (!tree->current->value) {
-				tree->current = tree->current->right;
-			} else if (!tree->current->left) {
-				tree->current->left = newNode();
-				tree->current = tree->current->left;
-			} else if (tree->current->value) {
-				tree->current = tree->current->left;
+			if (!current->right) {
+				current->right = newNode();
+				current = current->right;
+			} else if (!current->value) {
+				current = current->right;
+			} else if (!current->left) {
+				current->left = newNode();
+				current = current->left;
+			} else if (current->value) {
+				current = current->left;
 			} else break;
-			tree->parent = tree->current;
+			parent = current;
 			break;
 		case '~': // move to root
-			tree->current = tree->parent = tree->root;
+			current = parent = root;
 			break;
 		case '[': // BF loop start
-			if (!tree->current->value) {
+			if (!current->value) {
 				// jump to pre-determined end-of-loop PC
-				program->pc = q_dequeue(program->jumpForward);
+				pc = q_dequeue(jumpForward);
 			} else {
 				// push PC for the current start-of-loop
-				s_push(program->jumpBack, program->pc);
+				s_push(jumpBack, pc);
 			}
 			break;
 		case ']': // BF loop end
-			if (tree->current->value) {
-				program->pc = s_peek(program->jumpBack);
+			if (current->value) {
+				pc = s_peek(jumpBack);
 			} else {
 				// break out of loop and remove jump points
-				q_dequeue(program->jumpForward);
-				s_pop(program->jumpBack);
+				q_dequeue(jumpForward);
+				s_pop(jumpBack);
 			}
 			break;
 		case '.': // put current node value to stdout
-			putchar(tree->current->value);
+			putchar(current->value);
 			break;
 		case ',': // set current node value = getchar (EOF = 0)
 			c = getchar();
 			if (c == EOF) {
 				c = 0;
 			}
-			tree->current->value = c;
+			current->value = c;
 			break;
 		case '\0': // end program
 			return;
 		}
-		++program->pc;
+		++pc;
 	}
 	// We never free the tree, but that's OK, because
 	// once execution terminates, the interpreter terminates as well

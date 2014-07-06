@@ -9,8 +9,6 @@
 typedef struct program {
 	// The size in bytes of the program (also, the number of instructions)
 	int size;
-	// Current program counter
-	int pc;
 	// Array of the program instructions (last byte is NULL)
 	char *instructions;
 	// Stack to push the PCs for start-of-loop instructions during execution

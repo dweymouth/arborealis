@@ -58,7 +58,6 @@ Program *parse(FILE *sourceFile) {
 	
 	Program *program = malloc(sizeof(Program));
 	program->size = programSize;
-	program->pc = 0;
 	program->instructions = programBuffer;
 	program->jumpForward = jumpQueue;
 	program->jumpBack = s_create();
