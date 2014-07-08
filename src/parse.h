@@ -11,9 +11,6 @@ typedef struct program {
 	int size;
 	// Array of the program instructions (last byte is NULL)
 	char *instructions;
-	// Stack to push the PCs for start-of-loop instructions during execution
-	// The stack starts out empty after the parse stage
-	Stack *jumpBack;
 	// Queue of end-of-loop instruction PCs. Pre-determined during parse stage
 	Queue *jumpForward;
 } Program;

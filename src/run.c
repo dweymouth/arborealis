@@ -28,9 +28,9 @@ void run(Program *program) {
 	// Localize pointers for optimization
 	char *instructions = program->instructions;
 	Queue *jumpForward = program->jumpForward;
-	Stack *jumpBack = program->jumpBack;
+	Stack *jumpBackStack = s_create();
 
-	register int pc = 0; // program counter
+	register int pc = 0, jumpBack; // program counter, PC of current start loop
 	int c; // temporarily hold a character read from stdin
 
 	// Execute the program instructions. Loop terminates when the PC
@@ -113,21 +113,23 @@ void run(Program *program) {
 			current = parent = root;
 			break;
 		case '[': // BF loop start
-			if (!current->value) {
+			if (!current->value) { // skipping a loop
 				// jump to pre-determined end-of-loop PC
 				pc = q_dequeue(jumpForward);
-			} else {
+			} else { // entering a loop
 				// push PC for the current start-of-loop
-				s_push(jumpBack, pc);
+				s_push(jumpBackStack, pc);
+				jumpBack = pc;
 			}
 			break;
 		case ']': // BF loop end
-			if (current->value) {
-				pc = s_peek(jumpBack);
-			} else {
+			if (current->value) { // continuing a loop
+				pc = jumpBack;
+			} else { // exiting a loop
 				// break out of loop and remove jump points
 				q_dequeue(jumpForward);
-				s_pop(jumpBack);
+				s_pop(jumpBackStack);
+				jumpBack = s_pop(jumpBackStack);
 			}
 			break;
 		case '.': // put current node value to stdout

@@ -60,6 +60,5 @@ Program *parse(FILE *sourceFile) {
 	program->size = programSize;
 	program->instructions = programBuffer;
 	program->jumpForward = jumpQueue;
-	program->jumpBack = s_create();
 	return program;
 }
