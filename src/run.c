@@ -129,7 +129,7 @@ void run(Program *program) {
 				// break out of loop and remove jump points
 				q_dequeue(jumpForward);
 				s_pop(jumpBackStack);
-				jumpBack = s_pop(jumpBackStack);
+				jumpBack = s_peek(jumpBackStack);
 			}
 			break;
 		case '.': // put current node value to stdout
