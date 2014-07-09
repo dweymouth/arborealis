@@ -2,7 +2,7 @@
 #define PARSE_H
 
 #include <stdio.h>
-#include "stack_queue.h"
+#include "hashtable.h"
 
 // Program represents the instructions and current state of an Arborealis program,
 // not including the tree data structure that is the execution environment.
@@ -11,8 +11,8 @@ typedef struct program {
 	int size;
 	// Array of the program instructions (last byte is NULL)
 	char *instructions;
-	// Queue of end-of-loop instruction PCs. Pre-determined during parse stage
-	Queue *jumpForward;
+	// Lookup table for PC of matching end loop ']' given PC of start loop '['
+	Hashtable *jumpTable;
 } Program;
 
 // Parses an Arborealis source file into a Program struct

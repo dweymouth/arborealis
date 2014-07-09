@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -iquotesrc -Wall
-OBJECTS = stack_queue.o parse.o run.o main.o
+OBJECTS = stack.o hashtable.o parse.o run.o main.o
 
 arborealis: $(OBJECTS)
 	@$(CC) $(CFLAGS) -o arborealis $(OBJECTS)
@@ -8,8 +8,11 @@ arborealis: $(OBJECTS)
 main.o: src/main.c
 	@$(CC) $(CFLAGS) -c src/main.c
 
-stack_queue.o: src/stack_queue.c src/stack_queue.h
-	@$(CC) $(CFLAGS) -c src/stack_queue.c
+stack.o: src/stack.c src/stack.h
+	@$(CC) $(CFLAGS) -c src/stack.c
+
+hashtable.o: src/hashtable.c src/hashtable.h
+	@$(CC) $(CFLAGS) -c src/hashtable.c
 
 parse.o: src/parse.c src/parse.h
 	@$(CC) $(CFLAGS) -c src/parse.c

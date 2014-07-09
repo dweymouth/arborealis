@@ -3,7 +3,6 @@
 #include <string.h>
 #include <sysexits.h>
 
-#include "stack_queue.h"
 #include "parse.h"
 #include "run.h"
 

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "stack.h"
 #include "parse.h"
 #include "run.h"
 
@@ -27,8 +28,10 @@ void run(Program *program) {
 
 	// Localize pointers for optimization
 	char *instructions = program->instructions;
-	Queue *jumpForward = program->jumpForward;
-	Stack *jumpBackStack = s_create();
+	Hashtable *jumpTable = program->jumpTable;
+
+	// Stack to keep track of current nested loop
+	Stack *loopContext = s_create();
 
 	register int pc = 0, jumpBack; // program counter, PC of current start loop
 	int c; // temporarily hold a character read from stdin
@@ -115,10 +118,10 @@ void run(Program *program) {
 		case '[': // BF loop start
 			if (!current->value) { // skipping a loop
 				// jump to pre-determined end-of-loop PC
-				pc = q_dequeue(jumpForward);
+				pc = ht_lookup(jumpTable, pc);
 			} else { // entering a loop
 				// push PC for the current start-of-loop
-				s_push(jumpBackStack, pc);
+				s_push(loopContext, pc);
 				jumpBack = pc;
 			}
 			break;
@@ -126,10 +129,8 @@ void run(Program *program) {
 			if (current->value) { // continuing a loop
 				pc = jumpBack;
 			} else { // exiting a loop
-				// break out of loop and remove jump points
-				q_dequeue(jumpForward);
-				s_pop(jumpBackStack);
-				jumpBack = s_pop(jumpBackStack);
+				s_pop(loopContext);
+				jumpBack = s_peek(loopContext);
 			}
 			break;
 		case '.': // put current node value to stdout

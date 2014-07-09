@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "parse.h"
-#include "stack_queue.h"
+#include "stack.h"
 
 #define BUFFERSIZE 1024
 
@@ -14,51 +14,56 @@ inline bool isInstruction(const char ch) {
 		|| ch == '!' || ch == '?' || ch == '~' || ch == '.' || ch == ',';
 }
 
-Program *parse(FILE *sourceFile) {
-	// get file size
-	fseek(sourceFile, 0, SEEK_END);
-	int fileSize = ftell(sourceFile);
-	fseek(sourceFile, 0, SEEK_SET);
-	
-	Queue *jumpQueue = q_create();
-	char buffer[BUFFERSIZE]; // file input buffer
-	char *programBuffer = malloc(sizeof(int)*fileSize);
-	int i, numRead, programSize = 0, openBraceCount = 0, lastOpenBrace;
+inline int fileSize(FILE *file) {
+	fseek(file, 0, SEEK_END);
+	int size = ftell(file);
+	fseek(file, 0, SEEK_SET);
+	return size;
+}
 
+Program *parse(FILE *sourceFile) {
+	Stack *loopContext = s_create();
+	Hashtable *jumpTable = ht_create(0);
+
+	// allocate an array the same size as source file to hold instructions
+	char *programBuffer = malloc(sizeof(int)*fileSize(sourceFile));
+	
+	char buffer[BUFFERSIZE]; // file input buffer
+	int i, numRead, programSize = 0;
 	do {
+		// read next chunk of source file
 		numRead = fread(buffer, 1, BUFFERSIZE, sourceFile);
 		for (i = 0; i < numRead; i++) {
 			if (!isInstruction(buffer[i])) {
 				continue; // ignore non-instruction characters
 			}
 			programBuffer[programSize++] = buffer[i];
-			if (buffer[i] == ']') {
-				if (openBraceCount) { // add to end-of-loop location queue
-					q_enqueue(jumpQueue, programSize-1);
-					--openBraceCount;
+			if (buffer[i] == '[') {
+				s_push(loopContext, programSize - 1);
+			} else if (buffer[i] == ']') {
+				if (s_size(loopContext) > 0) { // add to lookup table
+					ht_add(jumpTable, s_pop(loopContext), programSize - 1);
 				} else { // unmatched end-of-loop
 					fprintf(stderr, "ParseError: unmatched ] (instr #%d)\n", programSize);
 					free(programBuffer);
 					return NULL;
 				}
-			} else if (buffer[i] == '[') {
-				lastOpenBrace = programSize;
-				++openBraceCount;
 			}
 		}
 	} while (numRead);
-	
-	if (openBraceCount) {
-		fprintf(stderr, "ParseError: Unmatched [ (instr #%d)\n", lastOpenBrace);
+	if (s_size(loopContext) > 0) {
+		fprintf(stderr, "ParseError: Unmatched [ (instr #%d)\n", s_pop(loopContext) + 1);
 		free(programBuffer);
 		return NULL;
 	}
+	s_destroy(loopContext);
 	programBuffer[programSize] = '\0'; // null-terminated program instructions
+	// if source file had comments, there's un-needed space in programBuffer
 	programBuffer = realloc(programBuffer, programSize+1);
 	
 	Program *program = malloc(sizeof(Program));
 	program->size = programSize;
 	program->instructions = programBuffer;
-	program->jumpForward = jumpQueue;
+	program->jumpTable = jumpTable;
 	return program;
 }
