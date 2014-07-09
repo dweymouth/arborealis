@@ -21,6 +21,14 @@ inline int fileSize(FILE *file) {
 	return size;
 }
 
+inline Program *createProgram(int size, char *instructions, Hashtable *jumpTable) {
+	Program program = malloc(sizeof(Program));
+	program->size = size;
+	program->instructions = instructions;
+	program->jumpTable = jumpTable;
+	return program;
+}
+
 Program *parse(FILE *sourceFile) {
 	Stack *loopContext = s_create();
 	Hashtable *jumpTable = ht_create(0);
@@ -46,24 +54,24 @@ Program *parse(FILE *sourceFile) {
 				} else { // unmatched end-of-loop
 					fprintf(stderr, "ParseError: unmatched ] (instr #%d)\n", programSize);
 					free(programBuffer);
+					s_destroy(loopContext);
 					return NULL;
 				}
 			}
 		}
 	} while (numRead);
+	
 	if (s_size(loopContext) > 0) {
 		fprintf(stderr, "ParseError: Unmatched [ (instr #%d)\n", s_pop(loopContext) + 1);
 		free(programBuffer);
+		s_destroy(loopContext);
 		return NULL;
 	}
+
 	s_destroy(loopContext);
 	programBuffer[programSize] = '\0'; // null-terminated program instructions
 	// if source file had comments, there's un-needed space in programBuffer
 	programBuffer = realloc(programBuffer, programSize+1);
 	
-	Program *program = malloc(sizeof(Program));
-	program->size = programSize;
-	program->instructions = programBuffer;
-	program->jumpTable = jumpTable;
-	return program;
+	return createProgram(programSize, programBuffer, jumpTable);
 }
