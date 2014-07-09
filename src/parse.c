@@ -22,7 +22,7 @@ inline int fileSize(FILE *file) {
 }
 
 inline Program *createProgram(int size, char *instructions, Hashtable *jumpTable) {
-	Program program = malloc(sizeof(Program));
+	Program *program = malloc(sizeof(Program));
 	program->size = size;
 	program->instructions = instructions;
 	program->jumpTable = jumpTable;
@@ -52,7 +52,7 @@ Program *parse(FILE *sourceFile) {
 				if (s_size(loopContext) > 0) { // add to lookup table
 					ht_add(jumpTable, s_pop(loopContext), programSize - 1);
 				} else { // unmatched end-of-loop
-					fprintf(stderr, "ParseError: unmatched ] (instr #%d)\n", programSize);
+					fprintf(stderr, "ParseError: unmatched ']' (instr #%d)\n", programSize);
 					free(programBuffer);
 					s_destroy(loopContext);
 					return NULL;
@@ -62,7 +62,7 @@ Program *parse(FILE *sourceFile) {
 	} while (numRead);
 	
 	if (s_size(loopContext) > 0) {
-		fprintf(stderr, "ParseError: Unmatched [ (instr #%d)\n", s_pop(loopContext) + 1);
+		fprintf(stderr, "ParseError: Unmatched '[' (instr #%d)\n", s_pop(loopContext) + 1);
 		free(programBuffer);
 		s_destroy(loopContext);
 		return NULL;
