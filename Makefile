@@ -22,4 +22,4 @@ run.o: src/run.c src/run.h
 
 .PHONY: clean
 clean:
-	@rm *.o
+	@rm -f *.o

@@ -7,11 +7,27 @@
 
 #define BUFFERSIZE 1024
 
-inline bool isInstruction(const char ch) {
-	return ch == '>' || ch == '<' || ch == '(' || ch == ')'
-	    || ch == '/' || ch == '\\' || ch == '[' || ch == ']'
-		|| ch == '{' || ch == '}' || ch == '+' || ch == '-'
-		|| ch == '!' || ch == '?' || ch == '~' || ch == '.' || ch == ',';
+inline enum Instruction instructionOfChar(const char ch) {
+	switch (ch) {
+	case '<':  return MOVE_LEFT;
+	case '>':  return MOVE_RIGHT;
+	case '~':  return MOVE_ROOT;
+	case '(':  return PARADOX_LEFT;
+	case ')':  return PARADOX_RIGHT;
+	case '/':  return CREATE_LEFT;
+	case '\\': return CREATE_RIGHT;
+	case '{':  return IF_LEFT;
+	case '}':  return IF_RIGHT;
+	case '+':  return INCR;
+	case '-':  return DECR;
+	case '!':  return CONDITIONAL_LEFT;
+	case '?':  return CONDITIONAL_RIGHT;
+	case '[':  return LOOP_START;
+	case ']':  return LOOP_END;
+	case '.':  return PUTCHAR;
+	case ',':  return GETCHAR;
+	default:   return COMMENT;
+	}
 }
 
 inline int fileSize(FILE *file) {
@@ -38,17 +54,19 @@ Program *parse(FILE *sourceFile) {
 	
 	char buffer[BUFFERSIZE]; // file input buffer
 	int i, numRead, programSize = 0;
+	char instruction;
 	do {
 		// read next chunk of source file
 		numRead = fread(buffer, 1, BUFFERSIZE, sourceFile);
 		for (i = 0; i < numRead; i++) {
-			if (!isInstruction(buffer[i])) {
-				continue; // ignore non-instruction characters
+			instruction = instructionOfChar(buffer[i]);
+			if (instruction == COMMENT) {
+				continue;
 			}
-			programBuffer[programSize++] = buffer[i];
-			if (buffer[i] == '[') {
+			programBuffer[programSize++] = instruction;
+			if (instruction == LOOP_START) {
 				s_push(loopContext, programSize - 1);
-			} else if (buffer[i] == ']') {
+			} else if (instruction == LOOP_END) {
 				if (s_size(loopContext) > 0) { // add to lookup table
 					ht_add(jumpTable, s_pop(loopContext), programSize - 1);
 				} else { // unmatched end-of-loop

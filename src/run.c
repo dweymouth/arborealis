@@ -40,51 +40,54 @@ void run(Program *program) {
 	// points to the NULL instruction.
 	for (;;) {
 		switch(instructions[pc]) {
-		case '>': // move right if right exists
-			if (current->right) {
-				parent = current;
-				current = current->right;
-			}
-			break;
-		case '<': // move left if left exists
+		case MOVE_LEFT: // move left if right exists
 			if (current->left) {
 				parent = current;
 				current = current->left;
 			}
 			break;
-		case '(': // left paradox function
+		case MOVE_RIGHT: // move right if left exists
+			if (current->right) {
+				parent = current;
+				current = current->right;
+			}
+			break;
+		case MOVE_ROOT: // move to root
+			current = parent = root;
+			break;
+		case PARADOX_LEFT: // left paradox function
 			if (!current->left) {
 				current->left = parent;
 			}
 			break;
-		case ')': // right paradox function
+		case PARADOX_RIGHT: // right paradox function
 			if (!current->right) {
 				current->right = parent;
 			}
 			break;
-		case '/': // if left doesn't exist, create and move left
+		case CREATE_LEFT: // if left doesn't exist, create and move left
 			if (!current->left) {
 				current->left = newNode();
 			}
 			break;
-		case '\\': // if right doesn't exist, create and move right
+		case CREATE_RIGHT: // if right doesn't exist, create and move right
 			if (!current->right) {
 				current->right = newNode();
 			}
 			break;
-		case '{': // set value to 1 if left exists, 0 otherwise
+		case IF_LEFT: // set value to 1 if left exists, 0 otherwise
 			current->value = (current->left != NULL);
 			break;
-		case '}': // set value to 1 if right exists, 0 otherwise
+		case IF_RIGHT: // set value to 1 if right exists, 0 otherwise
 			current->value = (current->right != NULL);
 			break;
-		case '+': // incr value at current node
+		case INCR: // incr value at current node
 			++current->value;
 			break;
-		case '-': // decr value at current node
+		case DECR: // decr value at current node
 			--current->value;
 			break;
-		case '!': // conditional left mover
+		case CONDITIONAL_LEFT: // conditional left mover
 			if (!current->left) {
 				current->left = newNode();
 				current = current->left;
@@ -98,7 +101,7 @@ void run(Program *program) {
 			} else break;	
 			parent = current;
 			break;
-		case '?': // conditional right mover
+		case CONDITIONAL_RIGHT: // conditional right mover
 			if (!current->right) {
 				current->right = newNode();
 				current = current->right;
@@ -112,10 +115,7 @@ void run(Program *program) {
 			} else break;
 			parent = current;
 			break;
-		case '~': // move to root
-			current = parent = root;
-			break;
-		case '[': // BF loop start
+		case LOOP_START: // BF loop start
 			if (!current->value) { // skipping a loop
 				// jump to pre-determined end-of-loop PC
 				pc = ht_lookup(jumpTable, pc);
@@ -125,7 +125,7 @@ void run(Program *program) {
 				jumpBack = pc;
 			}
 			break;
-		case ']': // BF loop end
+		case LOOP_END: // BF loop end
 			if (current->value) { // continuing a loop
 				pc = jumpBack;
 			} else { // exiting a loop
@@ -133,17 +133,17 @@ void run(Program *program) {
 				jumpBack = s_peek(loopContext);
 			}
 			break;
-		case '.': // put current node value to stdout
+		case PUTCHAR: // put current node value to stdout
 			putchar(current->value);
 			break;
-		case ',': // set current node value = getchar (EOF = 0)
+		case GETCHAR: // set current node value = getchar (EOF = 0)
 			c = getchar();
 			if (c == EOF) {
 				c = 0;
 			}
 			current->value = c;
 			break;
-		case '\0': // end program
+		case END_PROGRAM:
 			return;
 		}
 		++pc;
