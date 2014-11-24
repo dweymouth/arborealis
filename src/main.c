@@ -6,7 +6,7 @@
 #include "parse.h"
 #include "run.h"
 
-#define VERSION "0.1"
+#define VERSION "0.1.1"
 
 void printHelpAndExit() {
 	printf("Usage: arborealis [switches] <source file>\n");
@@ -25,6 +25,8 @@ void printVersionAndExit() {
 }
 
 int main(int argc, char *argv[]) {
+	Program program;
+	bool success;
 	if (argc != 2) {
 		printf("Usage: arborealis <source file>\n");
 		exit(EX_USAGE);
@@ -39,13 +41,11 @@ int main(int argc, char *argv[]) {
 		fprintf(stdout, "Error: Could not open source file '%s'\n", argv[1]);
 		exit(EX_IOERR);
 	}
-	Program *program = parse(sourceFile);
+	success = parse(sourceFile, &program);
 	fclose(sourceFile);
-	if (!program) {
-		// parse failed - error messages printed by parse function
-		exit(EX_DATAERR);
+	if (success) {
+		run(&program);
+		exit(EX_OK);
 	}
-
-	run(program);
-	exit(EX_OK);
+	exit(EX_DATAERR);
 }

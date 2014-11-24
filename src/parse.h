@@ -2,6 +2,7 @@
 #define PARSE_H
 
 #include <stdio.h>
+#include <stdbool.h>
 #include "hashtable.h"
 
 enum Instruction {
@@ -38,7 +39,7 @@ typedef struct program {
 } Program;
 
 // Parses an Arborealis source file into a Program struct
-// Prints error messages and returns NULL if the parse cannot be completed
-Program *parse(FILE *);
+// Prints error messages and returns false if the parse cannot be completed
+bool parse(FILE *, Program *program);
 
 #endif

@@ -45,7 +45,7 @@ inline Program *createProgram(int size, char *instructions, Hashtable *jumpTable
 	return program;
 }
 
-Program *parse(FILE *sourceFile) {
+bool parse(FILE *sourceFile, Program *program) {
 	Stack *loopContext = s_create();
 	Hashtable *jumpTable = ht_create(0);
 
@@ -73,7 +73,7 @@ Program *parse(FILE *sourceFile) {
 					fprintf(stderr, "ParseError: unmatched ']' (instr #%d)\n", programSize);
 					free(programBuffer);
 					s_destroy(loopContext);
-					return NULL;
+					return false;
 				}
 			}
 		}
@@ -83,13 +83,15 @@ Program *parse(FILE *sourceFile) {
 		fprintf(stderr, "ParseError: Unmatched '[' (instr #%d)\n", s_pop(loopContext) + 1);
 		free(programBuffer);
 		s_destroy(loopContext);
-		return NULL;
+		return false;
 	}
 
 	s_destroy(loopContext);
 	programBuffer[programSize] = '\0'; // null-terminated program instructions
 	// if source file had comments, there's un-needed space in programBuffer
 	programBuffer = realloc(programBuffer, programSize+1);
-	
-	return createProgram(programSize, programBuffer, jumpTable);
+	program->instructions = programBuffer;
+	program->size = programSize;
+	program->jumpTable = jumpTable;
+	return true;
 }
